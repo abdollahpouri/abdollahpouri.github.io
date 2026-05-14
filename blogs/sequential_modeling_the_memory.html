@@ -486,22 +486,16 @@
     </div>
 
     <p>
-      While the initial Hopfield Network (1982, Hopfield) was not a sequential model, it is a great example to start with because it is a simple model that can be used to understand the concept of memory in machine learning.
-      A Hopfield network (or associative memory) is a form of recurrent neural network that can serve as a content-addressable memory. The Hopfield network consists of a single layer of neurons, where each neuron is connected to every other neuron except itself. 
-      These connections are bidirectional and symmetric, meaning the weight of the connection from neuron i to neuron j is the same as the weight from neuron j to neuron i. Patterns are associatively recalled by fixing certain inputs, and dynamically evolve the network to minimize an energy function, towards local energy minimum states that correspond to stored patterns. 
-      Patterns are associatively learned (or "stored") by a Hebbian learning algorithm. One of the key features of Hopfield networks is their ability to recover complete patterns from partial or noisy inputs, making them robust in the face of incomplete or corrupted data.
+      While the initial Hopfield Network (1982, Hopfield) was not a sequential model and also not learnable in the same sense that we know today such as using gradient descent, it is a great example to start with because it is a simple model that can be used to understand the concept of memory in machine learning.
+      According to Wikipedia, Hopfield network (or associative memory) consists of a single layer of neurons, where each neuron is connected to every other neuron except itself. 
+      These connections are bidirectional and symmetric, meaning the weight of the connection from neuron i to neuron j is the same as the weight from neuron j to neuron i. Patterns are associatively recalled by fixing certain inputs, and dynamically evolve the network to minimize an energy function, towards local energy minimum states that correspond to our stored patterns. 
+      Patterns are associatively learned (or "stored") by a Hebbian learning algorithm. One of the key features of Hopfield networks was their ability to recover complete patterns from partial or noisy inputs, making them robust in the face of incomplete or corrupted data. However, due to their binary-valued neurons (±1 or 0/1), limited scalability, and incompatibility with gradient-based learning, classical Hopfield networks are rarely used in modern machine learning.
       
-      The weights are set all at once from the stored patterns and not learned iteratively through learning mechanisms such as gradient descent.
-      I don't want to go into the details of Hopfield Networks and I just wanted to acknowledge its existence and its importance in the history of machine learning and how we can use it to understand the concept of memory in machine learning. I encourage you to take a look at it as the idea behind it is super elegant. Especially the modern Hopfield networks (2020, Ramsauer et al.) are actually very closely related to attention mechanism which I will talk about in the next section.
+      I don't want to go into the details of Hopfield Networks and I just wanted to acknowledge its existence and its importance in the history of machine learning and how we can use it to understand the concept of memory in machine learning. I encourage you to take a look at it as the idea behind it is super elegant. Especially the modern Hopfield networks (2020, Ramsauer et al.) are actually very closely related to the attention mechanism.
     </p>
 
     <p>
-      Hopfild Network is a powerful idea. But memory here meant something very specific: a set of fixed,
-      static patterns encoded in the network weights, retrievable by similarity to given input. The network had no
-      sense of order and no notion of "what came before" which is why it is not a sequential model. You could store a face and recall it
-      from a blurry photo, but you couldn't store a conversation. We know that a conversation
-      isn't a one-shot pattern, it's a sequence where the order of what's been said matters. Also, the initial Hopfiled network was not learnable in the same sense that we know today such as
-      using gradient descent to learn the weights. How do we build
+    So the classic Hopfield Network had two limitations to be used for the memory problem we needed for sequential modeling: no order and not learnable using gradient descent. How do we build
       a memory that can evolve and tracks something as it unfolds step by step? The answer was to change the architecture of the network somehow that can track the order of the sequence and remember things in a sequential manner and also its weights can be learned using gradient descent which is exactly what recurrent neural networks (RNNs) promissed to do and I will talk about them in the next section.
     </p>
   </section>

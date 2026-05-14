@@ -497,7 +497,7 @@
 
     <p>
     So the classic Hopfield Network had two limitations to be used for the memory problem we needed for sequential modeling: no order and not learnable using gradient descent. How do we build
-      a memory that can evolve and tracks something as it unfolds step by step? The answer was to change the architecture of the network somehow that can track the order of the sequence and remember things in a sequential manner and also its weights can be learned using gradient descent which is exactly what recurrent neural networks (RNNs) promissed to do and I will talk about them in the next section.
+      a memory that can evolve and tracks something as it unfolds step by step? The answer was to change the architecture of the network somehow that can track the order of the sequence and remember things in a sequential manner and also its weights can be learned using gradient descent which is exactly what recurrent neural networks (RNNs) promised to do and I will talk about them in the next section.
     </p>
   </section>
 
@@ -624,12 +624,12 @@
 
     <p>
       The GRU (2014) simplifies this by folding cell state and hidden state into one. It also combined the forget and input gates into one gate called update gate which controls both how much to forget of the past memoery and how much of the current input to be added to the memory. GRU also has a reset gate that controls how much of the past hidden state to expose when computing the new candidate state.
-      It has significantly fewer parameters which makes itfaster to train and almost achieves the same performance as LSTMs in most cases. The tradeoff is less expressive control: no separate
+      It has significantly fewer parameters which makes it faster to train and almost achieves the same performance as LSTMs in most cases. The tradeoff is less expressive control: no separate
       memory channel, just a smoother interpolation between old state and new input. 
 
     <p>
       But even LSTMs didn't change the underlying shape of the problem. Memory was still a
-      vector. Still a single compressed summary of everything. In seq2seq (sequence to sequene) translation, we
+      vector. Still a single compressed summary of everything. In seq2seq (sequence to sequence) translation, we
       still had to hand the decoder a single fixed-size vector encoding large number of tokens (say 500 tokens) of input.
       All of it squeezed into one thing, before decoding even starts. No sense of which part of the input sequence was more informative and more related to a given part of the output sequence. That's the bottleneck.
     </p>

@@ -1,34 +1,189 @@
 <!DOCTYPE html>
-<html>
-	
+<html lang="en">
 <head>
-	<title>Himan Abdollahpouri - Homepage</title>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	<link rel="stylesheet" href="assets/css/main.css" />
+  <title>Blog — Himan Abdollahpouri</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #f8f7f4;
+      color: #1c1c1a;
+      font-family: 'Inter', -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 48px;
+      border-bottom: 1px solid #e8e5e0;
+      background: #f8f7f4;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    nav .logo {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1c1c1a;
+      text-decoration: none;
+      letter-spacing: -0.01em;
+    }
+
+    nav .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+
+    nav .nav-links a {
+      font-size: 14px;
+      color: #6b6861;
+      text-decoration: none;
+      font-weight: 400;
+      transition: color 0.15s;
+    }
+
+    nav .nav-links a:hover { color: #1c1c1a; }
+    nav .nav-links a.active { color: #1c1c1a; font-weight: 500; }
+
+    /* ── Page header ── */
+    .page-header {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 64px 24px 48px;
+    }
+
+    .page-header h1 {
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      color: #1c1c1a;
+      margin-bottom: 10px;
+    }
+
+    .page-header p {
+      font-size: 16px;
+      color: #6b6861;
+      line-height: 1.6;
+    }
+
+    /* ── Post list ── */
+    .post-list {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 24px 100px;
+    }
+
+    .post-card {
+      display: block;
+      padding: 32px 0;
+      border-top: 1px solid #e8e5e0;
+      text-decoration: none;
+      color: inherit;
+      transition: opacity 0.15s;
+    }
+
+    .post-card:last-child {
+      border-bottom: 1px solid #e8e5e0;
+    }
+
+    .post-card:hover { opacity: 0.75; }
+
+    .post-card .tag {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #2551c8;
+      margin-bottom: 10px;
+    }
+
+    .post-card h2 {
+      font-size: 21px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: #1c1c1a;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+
+    .post-card .excerpt {
+      font-size: 15px;
+      color: #6b6861;
+      line-height: 1.65;
+      margin-bottom: 14px;
+      max-width: 640px;
+    }
+
+    .post-card .meta {
+      font-size: 13px;
+      color: #9e9a93;
+    }
+
+    .post-card .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 14px;
+    }
+
+    .post-card .chip {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 99px;
+      background: #eeecea;
+      color: #4a4845;
+      border: 1px solid #dedad3;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .post-card:hover .chip {
+      background: #e3e0db;
+    }
+  </style>
 </head>
+<body>
 
-<!-- Header 2 -->
-<header id="header">
-	<nav id="nav">
-		<ul>
-			<li><a href="index.html">Home</a></li>
-		</ul>
-	</nav>
-</header>
-<section id="banner">
-	<h2>Blog posts Coming Soon</h2>
-	
-	<h3 style="color: white;">Machine Learning | Recommender Systems | Data Science</h3>
+  <nav>
+    <a href="index.html" class="logo">Himan Abdollahpouri</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#research">Research</a></li>
+      <li><a href="blogs.html" class="active">Blog</a></li>
+      <li><a href="assets/docs/CV.pdf">CV</a></li>
+    </ul>
+  </nav>
 
-	<ul class="icons">
-		<li><a href="https://twitter.com/himan_abd" class="icon fa-twitter" target="_blank"></a></li>
-		<li><a href="mailto:habdollahpouri@gmail.com" class="icon fa-envelope" target="_blank"></a></li>
-		<li><a href="https://www.linkedin.com/in/himanabdollahpouri/" class="icon fa-linkedin" target="_blank"></a></li>
-		<li><a href="https://scholar.google.com/citations?user=g0eIPRkAAAAJ&hl=en&oi=ao" class="icon fa-graduation-cap" target="_blank"></a></li>
-	</ul>
-</section> 
+  <div class="page-header">
+    <h1>Blog</h1>
+    <p>Notes on machine learning, recommender systems, and the things I've had to think through carefully.</p>
+  </div>
 
-<!DOCTYPE HTML>
+  <div class="post-list">
 
-<html>
+    <a class="post-card" href="blogs/sequential_modeling_the_memory.html">
+      <h2>Sequence Modeling — The Memory Problem</h2>
+      <p class="excerpt">What does it actually mean for a model to "remember" something? A first-principles look at the memory problem in sequential modeling, before any architecture enters the picture.</p>
+      <div class="meta">May 2026</div>
+      <div class="tags">
+        <span class="chip">Sequential Modeling</span>
+        <span class="chip">RNNs</span>
+        <span class="chip">Memory</span>
+        <span class="chip">Machine Learning</span>
+      </div>
+    </a>
+
+  </div>
+
+</body>
+</html>

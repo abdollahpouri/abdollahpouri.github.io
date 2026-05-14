@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sequence Modeling — The Memory Problem</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:             #f8f7f4;
+      --surface:        #eeecea;
+      --border:         #dedad3;
+      --text-primary:   #1c1c1a;
+      --text-secondary: #4a4845;
+      --text-muted:     #96918a;
+      --accent:         #2551c8;
+      --accent-soft:    rgba(37, 81, 200, 0.08);
+      --accent-glow:    rgba(37, 81, 200, 0.05);
+      --gold:           #7a5e14;
+      --gold-soft:      rgba(122, 94, 20, 0.07);
+      --rule:           #dedad3;
+
+      --seq-past-fill:   #eeecea;
+      --seq-past-stroke: #b8b4ad;
+      --seq-curr-fill:   #dce5fc;
+      --seq-curr-stroke: #2551c8;
+      --seq-mem-color:   #2551c8;
+      --seq-line:        #d0cdc8;
+      --seq-label-color: #1c1c1a;
+      --seq-curr-label:  #2551c8;
+      --seq-caption-col: #96918a;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 17px; scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: 'Lora', Georgia, serif;
+      line-height: 1.85;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page-shell {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 24px 120px;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      padding: 48px 0 64px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 72px;
+    }
+
+    .site-header .kicker {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    .site-header h1 {
+      font-family: 'Lora', serif;
+      font-size: clamp(2rem, 5vw, 2.9rem);
+      font-weight: 600;
+      line-height: 1.25;
+      color: var(--text-primary);
+      margin-bottom: 22px;
+    }
+
+    .site-header .subtitle {
+      font-family: 'Inter', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 300;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      max-width: 640px;
+    }
+
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-top: 36px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .meta-row .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-muted); }
+
+    /* ── TOC ── */
+    .toc-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 6px;
+      padding: 28px 32px;
+      margin-bottom: 72px;
+    }
+
+    .toc-block .toc-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .toc-block ol { list-style: none; counter-reset: toc; }
+
+    .toc-block ol li {
+      counter-increment: toc;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      padding: 5px 0;
+    }
+
+    .toc-block ol li::before {
+      content: counter(toc, decimal-leading-zero);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .toc-block ol li a {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .toc-block ol li a:hover { color: var(--text-primary); }
+
+    /* ── Sections ── */
+    .section { margin-bottom: 80px; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .section-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 4px 10px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .section h2 {
+      font-family: 'Lora', serif;
+      font-size: 1.55rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.3;
+    }
+
+    .section h2 .model-tag {
+      display: block;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .section p { color: var(--text-primary); margin-bottom: 22px; }
+    .section p:last-child { margin-bottom: 0; }
+
+    hr.section-rule {
+      border: none;
+      border-top: 1px solid var(--rule);
+      margin: 72px 0;
+    }
+
+    /* ── Callouts ── */
+    .insight {
+      background: var(--accent-glow);
+      border: 1px solid rgba(37,81,200,0.15);
+      border-left: 3px solid var(--accent);
+      border-radius: 6px;
+      padding: 22px 26px;
+      margin: 32px 0;
+    }
+
+    .insight .insight-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.67rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .insight p {
+      font-size: 0.97rem;
+      color: var(--text-secondary);
+      line-height: 1.75;
+      margin: 0;
+    }
+
+    .key-shift {
+      background: var(--gold-soft);
+      border: 1px solid rgba(122,94,20,0.15);
+      border-left: 3px solid var(--gold);
+      border-radius: 6px;
+      padding: 20px 26px;
+      margin: 32px 0;
+    }
+
+    .key-shift .ks-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.67rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+
+    .key-shift p {
+      font-size: 0.97rem;
+      color: var(--text-secondary);
+      line-height: 1.75;
+      margin: 0;
+    }
+
+    /* ── Pull quote ── */
+    blockquote {
+      margin: 36px 0;
+      padding: 4px 0 4px 28px;
+      border-left: 3px solid var(--text-muted);
+      font-style: italic;
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ── Equation ── */
+    .eq-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 20px 28px;
+      margin: 28px 0;
+      text-align: center;
+      overflow-x: auto;
+    }
+
+    .eq-block .eq {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.02rem;
+      color: var(--text-primary);
+      letter-spacing: 0.02em;
+    }
+
+    .eq-block .eq-caption {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+
+    /* ── Table ── */
+    .mem-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 40px 0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .mem-table th {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .mem-table td {
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      vertical-align: top;
+    }
+
+    .mem-table tr:last-child td { border-bottom: none; }
+
+    .mem-table td.model-name {
+      color: var(--text-primary);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .mem-table td.memory-def {
+      color: var(--accent);
+      font-style: italic;
+    }
+
+    /* ── Sequence diagram ── */
+    .seq-diagram-wrap { margin: 32px 0 36px; overflow-x: auto; }
+
+    .seq-svg {
+      width: 100%;
+      max-width: 680px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .seq-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      fill: var(--seq-label-color);
+    }
+
+    .seq-label-curr { fill: var(--seq-curr-label); font-weight: 600; }
+
+    .seq-dots {
+      font-family: 'Inter', sans-serif;
+      font-size: 18px;
+      fill: var(--seq-past-stroke);
+      letter-spacing: 2px;
+    }
+
+    .seq-caption-text {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      fill: var(--seq-caption-col);
+      font-style: italic;
+    }
+
+    /* ── Footer ── */
+    .post-footer {
+      margin-top: 96px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+    }
+
+    .post-footer .final-line {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .page-shell { padding: 0 18px 80px; }
+      .site-header { padding: 36px 0 48px; margin-bottom: 52px; }
+      .section { margin-bottom: 60px; }
+      blockquote { font-size: 1rem; padding-left: 20px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-shell">
+
+  <!-- ── HEADER ── -->
+  <header class="site-header">
+    <h1>Sequence Modeling</h1>
+    <p class="subtitle">
+      The Memory Problem
+    </p>
+    <div class="meta-row">
+      <span>May 2026</span>
+      <span class="dot"></span>
+      <span>Sequential Modeling · NLP · Deep Learning</span>
+    </div>
+  </header>
+
+  <!-- ── TOC ── -->
+  <nav class="toc-block" aria-label="Table of contents">
+    <div class="toc-label">In this essay</div>
+    <ol>
+      <li><a href="#what">What is Sequence Modeling?</a></li>
+      <li><a href="#hopfield">Hopfield Network</a></li>
+      <li><a href="#rnn">Recurrent Neural Networks</a></li>
+      <li><a href="#lstm">LSTMs &amp; GRUs</a></li>
+      <li><a href="#attention">Attention Mechanisms</a></li>
+      <li><a href="#transformers">Transformers</a></li>
+      <li><a href="#conclusion">What "Memory" Became</a></li>
+    </ol>
+  </nav>
+
+  <!-- ── INTRO ── -->
+  <section class="section" style="margin-bottom: 56px;">
+    <p>
+      I have been trying to connect the dots between decades of efforts in sequence modeling
+      and understanding where we started from and how we got here. This blog post is my
+      interpretation of how I am seeing the evolution of sequence modeling.
+    </p>
+  </section>
+
+  <!-- ── §1 WHAT IS SEQUENCE MODELING ── -->
+  <section class="section" id="what">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <h2>What is Sequence Modeling?</h2>
+    </div>
+
+    <p>
+      To me, it is basically the problem of understanding a sequence of events (images,
+      tokens, price changes and so on) up to a current time T (T1, T2, &hellip; T<sub>N-1</sub>)
+      to make a decision at that time T. That decision could be things like whether you
+      purchase a stock given its price history, or what would you write after the word "next"
+      if you know the previous words that came before it were "I want to visit Tehran
+      next&hellip;". So we need to have some recollection of what came before what we see
+      right now: in other words we need some type of memory.
+    </p>
+
+    <!-- Sequence diagram -->
+    <div class="seq-diagram-wrap">
+      <svg class="seq-svg" viewBox="0 0 680 110" xmlns="http://www.w3.org/2000/svg" aria-label="Sequence of tokens C1 through CT">
+        <line x1="42" y1="44" x2="638" y2="44" stroke="var(--seq-line)" stroke-width="1.5"/>
+
+        <circle cx="42"  cy="44" r="22" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
+        <text x="42"  y="49" text-anchor="middle" class="seq-label">C<tspan baseline-shift="sub" font-size="9">1</tspan></text>
+
+        <circle cx="140" cy="44" r="22" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
+        <text x="140" y="49" text-anchor="middle" class="seq-label">C<tspan baseline-shift="sub" font-size="9">2</tspan></text>
+
+        <circle cx="238" cy="44" r="22" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
+        <text x="238" y="49" text-anchor="middle" class="seq-label">C<tspan baseline-shift="sub" font-size="9">3</tspan></text>
+
+        <text x="336" y="50" text-anchor="middle" class="seq-dots">· · ·</text>
+
+        <circle cx="434" cy="44" r="22" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
+        <text x="434" y="49" text-anchor="middle" class="seq-label">C<tspan baseline-shift="sub" font-size="9">T−1</tspan></text>
+
+        <circle cx="540" cy="44" r="26" fill="var(--seq-curr-fill)" stroke="var(--seq-curr-stroke)" stroke-width="2"/>
+        <text x="540" y="50" text-anchor="middle" class="seq-label seq-label-curr">C<tspan baseline-shift="sub" font-size="9">T</tspan></text>
+
+        <line x1="42"  y1="84" x2="488" y2="84" stroke="var(--seq-mem-color)" stroke-width="1.5"/>
+        <line x1="42"  y1="78" x2="42"  y2="84" stroke="var(--seq-mem-color)" stroke-width="1.5"/>
+        <line x1="488" y1="78" x2="488" y2="84" stroke="var(--seq-mem-color)" stroke-width="1.5"/>
+        <line x1="488" y1="84" x2="538" y2="84" stroke="var(--seq-mem-color)" stroke-width="1.5" marker-end="url(#arr)"/>
+        <defs>
+          <marker id="arr" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L7,3 z" fill="var(--seq-mem-color)"/>
+          </marker>
+        </defs>
+        <text x="262" y="100" text-anchor="middle" class="seq-caption-text">what we want to remember</text>
+      </svg>
+    </div>
+
+    <p>
+      We humans naturally can remember things both short-term and long-term (well some of us &#x1F642;)
+      but how can a machine remember in a way that is learnable? Note that by memory I don't
+      mean a storage mechanism where you retrieve the exact value (the exact word for example) by some key. That is not feasible
+      in practice for our sequence modeling problem since that means storing an infinite
+      number of sentences that we could create via the combination of our vocabulary set. 
+      Also, we want our memory mechanism to be differentiable so it can be used in our
+      machine learning model for training and learning patterns we wish to learn in our sequences. So let's take a look at the story of "memory" in machine
+      learning.
+    </p>
+  </section>
+
+  <hr class="section-rule" />
+
+  <!-- ── §2 HOPFIELD ── -->
+  <section class="section" id="hopfield">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2>Hopfield Network</h2>
+    </div>
+
+    <p>
+      The Hopfield network was, to the best of my knowledge, the first attempt to model
+      memory in machine learning. Before neural networks had anything to do with sequences,
+      Hopfield asked a simpler question: could a network store a pattern and recall it later
+      from a partial or corrupted version? The answer was yes, and the mechanism is really clean.
+    </p>
+
+    <p>
+      The idea was to build a network of neurons such that we can store patterns and then
+      recall them later using noisy patterns based on some rules such as neurons that activate together strengthen their connection. The weights are set all at once from the stored patterns, not learned iteratively through learning mechanisms such as gradient descent.
+      I don't want to go into the details
+      of Hopfield Networks and I encourage you to take a look at them as the idea behind
+      it is super elegant.
+    </p>
+
+    <p>
+      It's a powerful idea. But memory here meant something very specific: a set of fixed,
+      static patterns encoded in the weights, retrievable by similarity. The network had no
+      sense of order, no notion of "what came before." You could store a face and recall it
+      from a blurry photo, but you couldn't store a conversation. We know that a conversation
+      isn't a one-shot pattern, it's a sequence where the order of what's been said matters.
+      Memory frozen in time doesn't help with sequences. That's the gap. How do you build
+      memory that can evolve and tracks something as it unfolds step by step?
+    </p>
+  </section>
+
+  <hr class="section-rule" />
+
+  <!-- ── §3 RNN ── -->
+  <section class="section" id="rnn">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2>
+        <span class="model-tag">Recurrent Neural Networks · ~1986–1990s</span>
+        Memory as Compression
+      </h2>
+    </div>
+
+    <p>
+      The Hopfield network was not trainable in the same sense that we know today such as
+      using gradient descent. It also as mentioned above could not handle order. That's when
+      RNNs came in 1986&ndash;1990 by seeing memory as some kind of notepad to keep track
+      of what we have seen so far. At each step, you read the next input, update the notepad,
+      and pass it forward. The catch is the notepad has a fixed size so no matter how long
+      the sequence, everything you've seen needs to get squeezed into this notepad (a
+      fixed-dimensional vector). Memory, in an RNN, is compression of all the things we
+      have seen so far and that compression is also sequential meaning earlier information
+      is less likely to be represented as strongly as the late information. The notepad (our
+      method of compressing memory denoted by h) is as follows:
+    </p>
+
+    <div class="eq-block">
+      <div class="eq">h<sub>t</sub> = f(W<sub>h</sub> &middot; h<sub>t&minus;1</sub> + W<sub>x</sub> &middot; x<sub>t</sub> + b)</div>
+      <div class="eq-caption">
+        The hidden state h<sub>t</sub> is a function of the previous state and the current input:
+        a continuously rewritten summary of the sequence so far.
+      </div>
+    </div>
+
+    <p>
+      So technically the memory in RNN is W<sub>h</sub> &middot; h<sub>t&minus;1</sub> which
+      is some representation of the previous state which that by itself is a representation
+      of the step before it and that goes back until the very first word or whatever our
+      first information was (first image, first number etc).
+    </p>
+
+    <p>
+      There's something worth sitting with in that equation. h<sub>t</sub> is a completely
+      new vector computed from scratch at every step. The previous state h<sub>t&minus;1</sub>
+      is an input to the computation, but the output fully replaces it. There is no mechanism
+      to say "keep this part of the old state intact or only update this other part." The
+      whole thing gets overwritten, every single step.
+    </p>
+
+    <p>
+      The ambition is real: a single vector that carries the entire past, distilled. After
+      processing "The cat sat on the mat," that vector should encode not just the last word,
+      but the subject-verb-object relationship of the full sentence. The network learns to
+      do that compression through training.
+    </p>
+
+    <p>
+      But compression has costs. When the sequence gets long, early information has to survive
+      a chain of matrix multiplications (remember the calculation of h<sub>t</sub> is
+      recursive). Each one slightly transforms the signal. In practice, what happened at
+      step 1 is nearly undetectable by step 50. Not just that training is hard because of
+      vanishing gradients, but that the model also forgets information in the forward path.
+    </p>
+
+    <div class="key-shift">
+      <div class="ks-label">The Core Tension</div>
+      <p>
+        The RNN wants to remember, but its memory is fully overwritten at every step.
+        Compression always loses information, and the longer the sequence, the more gets
+        lost. Memory exists. It's just fragile.
+      </p>
+    </div>
+
+    <p>
+      The problem isn't architectural, it's fundamental. If our only mechanism for long-term
+      memory is a fixed-size vector that gets completely replaced at every step, we will
+      lose information. So the question shifted: what if we could have a separate mechanism
+      that somehow maintains a long-term memory without being over-written at every step
+      but rather it could be selectively preserved?
+    </p>
+  </section>
+
+  <hr class="section-rule" />
+
+  <!-- ── §4 LSTM ── -->
+  <section class="section" id="lstm">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <h2>
+        <span class="model-tag">LSTMs &amp; GRUs · 1997 / 2014</span>
+        Memory as Controlled Storage
+      </h2>
+    </div>
+
+    <p>
+      The LSTM's answer was to make memory a separate object. They introduced the cell state:
+      a channel that runs alongside the hidden state, mostly untouched, dedicated to long-term
+      storage. The hidden state still does computation. The cell state is more like a conveyor
+      belt: information rides it undisturbed unless something deliberately modifies it.
+    </p>
+
+    <p>
+      Textbooks spend a lot of time on the gates (input, forget, output). They are the
+      read/write/delete controls for this memory system to control how much of the past
+      should be maintained and how much should be replaced by the new information. But the
+      real insight isn't the gates. It's the additive update in each step. The LSTM writes
+      to the cell state by adding to it, not replacing it. That sounds like a small
+      implementation detail. It's not.
+    </p>
+
+    <div class="insight">
+      <div class="insight-label">The Gradient Highway</div>
+      <p>
+        Additive updates create an unobstructed path for gradients to flow backward. In a
+        standard RNN, every gradient passes through another matrix multiplication, slightly
+        shrinking each time. In an LSTM, the gradient can travel along the cell state
+        directly, without passing through a nonlinearity. The cell state is a highway.
+        That's why LSTMs can remember things from hundreds of steps back when vanilla RNNs
+        cannot.
+      </p>
+    </div>
+
+    <p>
+      The GRU (2014) simplifies this by folding cell state and hidden state into one. It also combined the forget and input gates into one gate called update gate which controls both how much to forget of the past memoery and how much of the current input to be added to the memory. GRU also has a reset gate (not mentioned here) that controls how much of the past hidden state to expose when computing the new candidate state.
+      It has significantly fewer parameters faster to train and almost achieves the same performance in most cases. The tradeoff is less expressive control: no separate
+      memory channel, just a smoother interpolation between old state and new input. 
+
+    <p>
+      But even LSTMs didn't change the underlying shape of the problem. Memory was still a
+      vector. Still a single compressed summary of everything. In seq2seq translation, you
+      still had to hand the decoder a single fixed-size vector encoding 500 tokens of input.
+      All of it squeezed into one thing, before decoding even starts. That's the bottleneck.
+    </p>
+  </section>
+
+  <hr class="section-rule" />
+
+  <!-- ── §5 ATTENTION ── -->
+  <section class="section" id="attention">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <h2>
+        <span class="model-tag">Attention Mechanisms · 2015</span>
+        Memory as Access
+      </h2>
+    </div>
+
+    <p>
+      By 2015, the bottleneck was well understood. Bahdanau et al. asked what that now may
+      seem obvious: what if we just kept all the encoder states and let the decoder look up
+      the ones it needs, step by step? Not a summary but more like a library.
+    </p>
+
+    <p>
+      That's attention. At each decoding step, the model scores the current decoder state
+      against every encoder hidden state. Softmax those scores into weights, take the weighted
+      sum. This way the decoder can pay more attention to some hidden states more than others
+      depending on where we are in the decoding process. The decoder isn't working from a
+      compressed memory. It's reaching back into the whole sequence and selecting, with
+      learned precision, what to actually use.
+    </p>
+
+    <div class="eq-block">
+      <div class="eq">context<sub>t</sub> = &Sigma;<sub>i</sub> &alpha;<sub>ti</sub> &middot; h<sub>i</sub> &nbsp;&nbsp; where &nbsp;&nbsp; &alpha;<sub>ti</sub> = softmax(score(s<sub>t</sub>, h<sub>i</sub>))</div>
+      <div class="eq-caption">
+        At decoding step t, a context vector is formed by weighting all encoder states h<sub>i</sub>
+        by their relevance score. Memory is no longer a fixed vector. It's a dynamic retrieval.
+      </div>
+    </div>
+
+    <p>
+      Notice the echo of Hopfield here. Both are retrieval mechanisms: given a query, find
+      the best-matching (most similar) content. But Hopfield used fixed, hard-coded patterns
+      and iterative energy minimization. Attention uses learned continuous representations
+      and a single differentiable operation. The spirit is the same (memory as recall, not
+      storage), but attention is learned, flexible, and end-to-end trainable. Though modern Hopfield networks (2020, Ramsauer et al.) are actually very closely related to attention.
+    </p>
+
+    <div class="key-shift">
+      <div class="ks-label">The Conceptual Shift</div>
+      <p>
+        RNNs and LSTMs were trying to build better storage. Attention changed the question:
+        instead of "how do we store more?" it asked "what if we don't need to store at all?"
+        Memory becomes something we retrieve on demand, not something we maintain. The past
+        is always there. We just need to learn to query it.
+      </p>
+    </div>
+
+    <p>
+      And memory became distributed. There's no single vector encoding the entire history.
+      Information sits in each encoder state, at each position, untouched. The decoder's
+      "memory" at any step is assembled fresh, a weighted combination of whatever is
+      currently relevant.
+    </p>
+  </section>
+
+  <hr class="section-rule" />
+
+  <!-- ── §6 TRANSFORMERS ── -->
+  <section class="section" id="transformers">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <h2>
+        <span class="model-tag">Transformers · 2017 →</span>
+        Memory at Scale
+      </h2>
+    </div>
+
+    <p>
+      The transformer took attention and made it the entire architecture. Not an add-on to
+      recurrence but actually a replacement for it. "Attention Is All You Need" wasn't just
+      a provocative title. It was a statement that we don't need the sequential bottleneck
+      at all.
+    </p>
+
+    <p>
+      The key move is self-attention: instead of attending from decoder to encoder, every
+      position in a sequence attends to every other position in the same sequence. At every
+      layer, each token directly exchanges information with every other token. Long-range
+      dependencies, which were the chronic weakness of RNNs, become no harder than
+      short-range ones. There's no chain to flow through.
+    </p>
+
+    <p>
+      This also killed recurrence, which unlocked parallelism. RNNs processed left to right,
+      each step waiting on the previous one. Transformers process the whole sequence at once.
+      On modern hardware, this is what made training on hundreds of billions of tokens
+      feasible. Scale became reachable.
+    </p>
+
+    <div class="insight">
+      <div class="insight-label">On LLMs and Memory</div>
+      <p>
+        An LLM is still, at its core, doing next-token prediction. The same task as an
+        n-gram model from the 1980s. What changed is the memory architecture. An n-gram
+        model has a 3&ndash;5 token window. A transformer has thousands. The "understanding"
+        that emerges in LLMs isn't magic. It's what happens when we can model fine-grained
+        long-range dependencies across enormous amounts of text.
+      </p>
+    </div>
+
+    <p>
+      In a real sense, transformer memory is the most radical departure from where we
+      started. Hopfield memory lived in weights. RNN memory lived in a hidden vector. LSTM
+      memory lived in a gated cell. Transformer memory lives nowhere specific, and everywhere.
+      All the tokens stay in the context window, and attention repeatedly mixes them together
+      so each one can pick up information from the rest. There's no single place to point to
+      and say "that is the memory." It is the computation itself.
+    </p>
+  </section>
+
+  <hr class="section-rule" />
+
+  <!-- ── §7 CONCLUSION ── -->
+  <section class="section" id="conclusion">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <h2>What "Memory" Became</h2>
+    </div>
+
+    <p>
+      End to end, what's most striking isn't the performance improvements. It's how
+      completely the concept of memory was reinvented each time.
+    </p>
+
+    <table class="mem-table" aria-label="Evolution of memory across architectures">
+      <thead>
+        <tr>
+          <th>Architecture</th>
+          <th>Memory Defined As</th>
+          <th>Core Limitation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="model-name">Hopfield</td>
+          <td class="memory-def">Stored static patterns</td>
+          <td>No sense of order or time</td>
+        </tr>
+        <tr>
+          <td class="model-name">RNN</td>
+          <td class="memory-def">Compressed hidden state</td>
+          <td>Fragile, overwritten at each step</td>
+        </tr>
+        <tr>
+          <td class="model-name">LSTM / GRU</td>
+          <td class="memory-def">Controlled, gated cell state</td>
+          <td>Still a single vector; bottlenecks seq2seq</td>
+        </tr>
+        <tr>
+          <td class="model-name">Attention</td>
+          <td class="memory-def">Dynamic retrieval from all positions</td>
+          <td>Quadratic cost with sequence length</td>
+        </tr>
+        <tr>
+          <td class="model-name">Transformer</td>
+          <td class="memory-def">Distributed, contextual, attention-woven</td>
+          <td>No persistent state across contexts</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      The progression isn't "more memory." It's a shift in the underlying metaphor each
+      time. Hopfield: memory is a filing system, retrieval by similarity. RNN: memory is a
+      running summary, constantly rewritten. LSTM: memory is infrastructure, a separate
+      channel with controlled read/write. Attention: memory isn't something you store. It's
+      something you retrieve on demand, from a sequence that's always fully available.
+    </p>
+
+    <blockquote>
+      What changed, at each step, wasn't the data or the compute. It was the model of what
+      memory <em>is</em>. Each redefinition unlocked a class of problems the previous
+      definition had made impossible.
+    </blockquote>
+
+    <p>
+      The remaining gap on that table (transformers have no persistent state across contexts)
+      is one of the most active areas in current research which is trying to answer the same question we started with: how do we effectively maintain memory.
+   
+    </p>
+
+    <p>
+      How do you make a machine remember? We're still figuring out what the question means.
+    </p>
+  </section>
+
+  <footer class="post-footer">
+    <p class="final-line">
+      Part of an ongoing series on sequential modeling. The next post will go deeper into the mechanics of RNNs, LSTMs, and Transformers — the actual architectures, the design decisions, and why each one was needed. Coming soon.
+    </p>
+  </footer>
+
+</div>
+</body>
+</html>

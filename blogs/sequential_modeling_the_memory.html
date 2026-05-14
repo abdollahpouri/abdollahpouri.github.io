@@ -776,22 +776,22 @@
         <tr>
           <td class="model-name">Hopfield</td>
           <td class="memory-def">Stored static patterns</td>
-          <td>No sense of order or time and it was not learnable</td>
+          <td>No sense of order or time and it was not learnable using gradient descent</td>
         </tr>
         <tr>
           <td class="model-name">RNN</td>
           <td class="memory-def">Compressed hidden state</td>
-          <td>Fragile, overwritten at each step</td>
+          <td>Fragile, overwritten at each step, vanishing gradients problem</td>
         </tr>
         <tr>
           <td class="model-name">LSTM / GRU</td>
           <td class="memory-def">Controlled, gated cell state</td>
-          <td>Still a single vector; bottlenecks seq2seq</td>
+          <td>Still a single vector; bottlenecks seq2seq (sequence to sequence) translation</td>
         </tr>
         <tr>
           <td class="model-name">Attention</td>
           <td class="memory-def">Dynamic retrieval from all positions</td>
-          <td>Quadratic cost with sequence length</td>
+          <td>Quadratic cost with sequence length (O(n^2) with sequence length n)</td>
         </tr>
         <tr>
           <td class="model-name">Transformer</td>

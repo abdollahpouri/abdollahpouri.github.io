@@ -449,7 +449,6 @@
     <div class="toc-label">In this essay</div>
     <ol>
       <li><a href="#what">What is Sequence Modeling?</a></li>
-      <li><a href="#hopfield">Hopfield Network</a></li>
       <li><a href="#rnn">Recurrent Neural Networks</a></li>
       <li><a href="#lstm">LSTMs &amp; GRUs</a></li>
       <li><a href="#attention">Attention Mechanisms</a></li>
@@ -462,9 +461,10 @@
   <section class="section" style="margin-bottom: 56px;">
     <p>
       This is something I'd been meaning to sit down and work through properly. 
-      Honestly I just wanted to understand how the concept of memory (a key to sequential modeling) kept getting redefined as the field of machine learning progressed
-      from Hopfield to RNNs to LSTMs to attention. More posts on ML and recommender systems coming. Next will be a much deeper dive into the mechanics of RNNs, LSTMs, and Transformers, their architectures, the design decisions, and why each one was needed. Feedback welcome. 
-      This post is mainly focused on the conceptual understanding of memory in machine learning and how it evolved over time.
+      Sequential modeling is the backbone of Large Language Models (LLMs) and hence I wanted to reviewr this topic from a deeper and relatively intuitive perspective. While I was reviewing different architectures and their capabilities from Recurrent Neural Networks to Transformers, I realized that the key concept that has been redefined and evolved over time is the concept of <strong>memory</strong>.
+      It makes sense. A sequential model needs to remember the past and use it to make a decision at the current time step.
+      I think this is a very interesting topic and I wanted to share my thoughts on it with you.
+      Also, I am planning to write more blog posts from now on on machine learning and recommender systems mainly from my own perspective and my own understanding with an intuitive touch to it. Feedback welcome. 
   </section>
 
   <!-- ── §1 WHAT IS SEQUENCE MODELING ── -->
@@ -574,16 +574,14 @@
 
     <p>
       We humans naturally can remember things both short-term and long-term (well, some of us &#x1F642;)
-      but how can a machine remember things? Note that by memory here I mean a mechanism that can be learned and used in a machine learning model to remember the past. So it is
-     not a storage mechanism where you retrieve the exact value (the exact word for example) by some key as that is not feasible for our sequence modeling problem since that means storing an infinite
-      number of sentences that we could create via the combination of our vocabulary set. 
-      And since it should be learnable it should be differentiable to allow for gradient descent and backpropagation so it can be used in our machine learning model for training and learning patterns we wish to learn in our sequences. Now that we understand what memory is in machine learning and its importance in sequential modeling, let's take a look at the story of memory in machine learning.
+      but the question ishow can a machine remember things and effectively use that memory to make a decision at the current time step? Note that by memory here I mean a mechanism that can be learned and used in a machine learning model to remember the past. So it is not a storage mechanism where you retrieve the exact value (the exact word for example) by some key as that is not feasible for our sequence modeling problem since that means storing an infinite
+      number of sentences that we could create via the combination of our vocabulary set. Now that we understand what memory is in machine learning and its importance in sequential modeling, let's take a look at the story of memory in sequential modeling.
     </p>
   </section>
 
   <hr class="section-rule" />
-
-  <!-- ── §2 HOPFIELD ── -->
+<!--
+  ── §2 HOPFIELD ──
   <section class="section" id="hopfield">
     <div class="section-header">
       <span class="section-num">02</span>
@@ -604,7 +602,7 @@
       a memory that can evolve and tracks something as it unfolds step by step? The answer was to change the architecture of the network somehow that can track the order of the sequence and remember things in a sequential manner and also its weights can be learned using gradient descent which is exactly what recurrent neural networks (RNNs) promised to do and I will talk about them in the next section.
     </p>
   </section>
-
+-->
   <hr class="section-rule" />
 
   <!-- ── §3 RNN ── -->
@@ -612,21 +610,20 @@
     <div class="section-header">
       <span class="section-num">03</span>
       <h2>
-        <span class="model-tag">Recurrent Neural Networks · ~1986–1990s</span>
-        Memory as Compression
+        Recurrent Neural Networks ~ 1986–1990s
+
+        <span class="model-tag">Memory as Compression</span>
       </h2>
     </div>
 
     <p>
-      The initial Hopfield network was not trainable in the same sense that we know today such as
-      using gradient descent. It also, as mentioned above, could not handle order. That's when
-      RNNs came in 1986&ndash;1990 by seeing memory as some kind of notepad to keep track
-      of what we have seen so far. At each step, you read the next input, update the notepad,
+      First RNNs were introduced around 1986&ndash;1990 by seeing memory as some kind of notepad to keep track
+      of what we have seen so far. At each step, we read the next input, update the notepad by somehow combining it with the new input,
       and pass it forward. The catch is the notepad has a fixed size so no matter how long
       the sequence, everything you've seen needs to get squeezed into this notepad (a
       fixed-dimensional vector). Memory, in an RNN, is compression of all the things we
       have seen so far and that compression is also sequential meaning earlier information
-      is less likely to be represented as strongly as the late information. The notepad (our
+      is less likely to be represented as strongly as the later information in the sequence. The notepad (our
       method of compressing memory denoted by h) is as follows:
     </p>
 
@@ -640,22 +637,22 @@
 
     <p>
       So technically the memory in RNN is W<sub>h</sub> &middot; h<sub>t&minus;1</sub> which
-      is some representation of the previous state which that by itself is a representation
-      of the step before it and that goes back until the very first word or whatever our
-      first information was (first image, first number etc).
+      is some representation of the previous state which by itself is also a representation
+      of the step prior to it and that goes back until the very first word or whatever our
+      first information was in the sequence (first image, first number etc).
     </p>
 
     <p>
       There's something worth sitting with in that equation. h<sub>t</sub> is a completely
-      new vector computed from scratch at every step. The previous state h<sub>t&minus;1</sub>
+      new vector computed from scratch at every step in the sequence. The previous state h<sub>t&minus;1</sub>
       is an input to the computation, but the output fully replaces it. There is no mechanism
       to say "keep this part of the old state intact or only update this other part." The
-      whole thing gets overwritten, every single step.
+      whole thing gets overwritten, every single step in the sequence.
     </p>
 
     <p>
-      The ambition is real: a single vector that carries the entire past, distilled. After
-      processing "The cat sat on the mat," that vector should encode not just the last word,
+      It is quite a novel idea for its own time. A single vector that carries the entire past, distilled. After
+      processing "I want to visit Tehran next," that vector should encode not just the last word,
       but the subject-verb-object relationship of the full sentence. The network learns to
       do that compression through training.
     </p>
@@ -664,7 +661,7 @@
       But compression has costs. When the sequence gets long, early information has to survive
       a chain of matrix multiplications (remember the calculation of h<sub>t</sub> is
       recursive). Each one slightly transforms the signal. In practice, what happened at
-      step 1 is nearly undetectable by step 50. Not just that training is hard because of
+      step 1 can become nearly undetectable by step 50. Not just that training is hard because of
       vanishing gradients, but that the model also forgets information in the forward path.
     </p>
 
@@ -692,8 +689,8 @@
     <div class="section-header">
       <span class="section-num">04</span>
       <h2>
-        <span class="model-tag">LSTMs &amp; GRUs · 1997 / 2014</span>
-        Memory as Controlled Storage
+        LSTMs &amp; GRUs ~ 1997 / 2014
+        <span class="model-tag">Memory as Controlled Storage</span> 
       </h2>
     </div>
 
@@ -745,8 +742,9 @@
     <div class="section-header">
       <span class="section-num">05</span>
       <h2>
-        <span class="model-tag">Attention Mechanisms · 2015</span>
-        Memory as Access
+        Attention Mechanisms ~ 2015
+        <span class="model-tag">Memory as Access</span>
+        
       </h2>
     </div>
 
@@ -776,20 +774,13 @@
       </div>
     </div>
 
-    <p>
-      Notice the similarity to Hopfield networks here. Both attention and hopfield networks are retrieval mechanisms: given a query, find
-      the best-matching (most similar) content. However, unlike Hopfield networks where the weights are fixed and you keep updating the weights until you reach a stable state, attention uses learned continuous representations
-      and a single differentiable operation (attention does retrieval in one shot: compute scores, softmax, weighted sum all in one forward pass and they are all mathematical function whose gradient can be computed and hence differentiable). The spirit is the same (memory as recall, not
-      storage), but attention is learned, flexible, and end-to-end trainable. Though it is interesting to note that modern Hopfield networks (2020, Ramsauer et al.) are actually very closely related to attention.
-    </p>
 
     <div class="key-shift">
       <div class="ks-label">The Conceptual Shift</div>
       <p>
-        RNNs and LSTMs were trying to build better storage. Attention changed the question:
-        instead of "how do we store more?" it asked "what if we don't need to store at all?"
-        Memory becomes something we retrieve on demand, not something we maintain. The past
-        is always there. We just need to learn to query it.
+        RNNs and LSTMs were trying to build better storage of the past. Attention changed the question:
+        instead of "how do we store more?" it asked "what if we don't need to store at all?" The past is always there. All tokens (or priovious information in the sequence) are there. 
+        Memory becomes something we retrieve on demand, not something we maintain over time. We just need to learn to query it. 
       </p>
     </div>
 
@@ -808,13 +799,13 @@
     <div class="section-header">
       <span class="section-num">06</span>
       <h2>
-        <span class="model-tag">Transformers · 2017 →</span>
-        Memory at Scale
+        Transformers ~ 2017 
+        <span class="model-tag">Memory at Scale</span>
       </h2>
     </div>
 
     <p>
-      The transformer took attention and said let's makes it the entire architecture. Not an add-on to
+      The transformer took attention and said let's makes it the entire architecture for sequential modeling. Not an add-on to
       recurrence to mitigate the vanishing gradient problem but actually a replacement for it. I believe "Attention Is All You Need" wasn't just
       a provocative title. It was a statement that we don't need the sequential bottleneck
       at all.
@@ -823,7 +814,7 @@
     <p>
       The key move is self-attention: instead of attending from decoder to encoder, every position in a sequence attends to every other position in the same sequence. At every layer, each token directly exchanges information with every other token. Long-range dependencies, which were the chronic weakness of RNNs, no longer degrade through repeated transformations, since tokens can attend to each other directly. There’s no long sequential chain that information has to flow through.
 
-      This doesn’t mean the problem disappears entirely. In practice, attention introduces its own challenges: limited context windows, quadratic scaling, and competition between tokens for attention. But it removes the specific bottleneck that made long-range dependencies so difficult in recurrent models.
+      This doesn’t mean the problem disappears entirely. In practice, attention introduces its own challenges: limited context windows, quadratic scaling with sequence length, and competition between tokens for attention (even tokens are competing for attention &#x1F642;). But it removes the specific bottleneck that made long-range dependencies so difficult in recurrent models.
       
       Though there is still a need to model the sequential nature of the data, which is why transformers use positional encodings to inject information about token order.
     </p>
@@ -840,7 +831,7 @@
       <p>
         An LLM is still, at its core, doing next-token prediction. The same task as an
         n-gram model from the 1980s. What changed is the memory architecture. An n-gram
-        model has a 3&ndash;5 token window. A transformer could have thousands. The "understanding"
+        model has a 3&ndash;5 token window. A transformer's context window could have thousands. The "understanding"
         that emerges in LLMs isn't magic. It's what happens when we can model fine-grained
         long-range dependencies across enormous amounts of text.
       </p>
@@ -848,8 +839,7 @@
 
     <p>
       In a real sense, transformer memory is the most radical departure from where we
-      started. Hopfield memory lived in weights. RNN memory lived in a hidden vector. LSTM
-      memory lived in a gated cell. Transformer memory lives nowhere specific but it can be accessed everywhere.
+      started. RNN memory lived in a hidden vector. LSTM memory lived in a gated cell. Transformer memory lives nowhere specific but it can be accessed everywhere.
       All the tokens stay in the context window, and attention repeatedly mixes them together
       so each one can pick up information from the rest. There's no single place to point to
       and say "that is the memory." It is the computation itself.
@@ -879,11 +869,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
+        <!-- <tr>
           <td class="model-name">Hopfield</td>
           <td class="memory-def">Stored static patterns</td>
           <td>No sense of order or time and it was not learnable using gradient descent</td>
-        </tr>
+        </tr> -->
         <tr>
           <td class="model-name">RNN</td>
           <td class="memory-def">Compressed hidden state</td>
@@ -908,9 +898,8 @@
     </table>
 
     <p>
-      So when we look at things from a birds eye view, the progression isn't "more memory." It's a shift in the underlying metaphor each
-      time. Hopfield: memory is a filing system, retrieval by similarity. RNN: memory is a
-      running summary, constantly rewritten at each step. LSTM: memory is infrastructure, a separate
+      So when we look at things from a birds eye view, the progression isn't store "more memory." It's a shift in the underlying metaphor each
+      time. RNN: memory is a running summary, constantly rewritten at each step. LSTM: memory is infrastructure, a separate
       channel with controlled read/write. Attention: memory isn't something you store. It's
       something you retrieve on demand, from a sequence that's always fully available.
     </p>
@@ -923,8 +912,20 @@
 
     <p>
       The remaining gap on that table (transformers have no persistent state across contexts)
-      is one of the most active areas in current research which is trying to answer the same question we started with: how do we effectively maintain memory?
-   
+      is one of the most active areas in current research which is trying to answer the same question we started with: how do we effectively maintain memory? 
+    </p>
+
+    <p>
+      One footnote worth mentioning: you might be surprised to learn that the idea of memory as retrieval didn't start with attention. 
+      Hopfield networks, introduced in the 1980s, were doing something conceptually similar: storing 
+      patterns and retrieving them by association. Given a partial or noisy input, the network would 
+      settle into the closest stored pattern. Memory as recall, not storage. The key limitation was 
+      that they used binary neurons and fixed weights which means they were not learnable in the modern gradient descent 
+      sense. But the spirit was there. Actually there is a recent paper by <a href="https://arxiv.org/abs/2008.02217" target="_blank">Ramsauer et al.</a>  that showed 
+      modern Hopfield networks and attention mechanisms are actually mathematically equivalent. The 
+      retrieval idea never went away. We just needed a few decades to make it differentiable and scalable.
+      I left Hopfield networks out of the main post on purpose. They're fascinating and quite innovative for their time but they sit in a different chapter of history of machine learning (pre-backpropagation and pre-gradient descent) and I felt mentioning them together with RNNs, LSTMs and Transformers could have changed dthe direction of the blog post.
+      However, I highly encourage you to take a look at them and their recent developments.
     </p>
 
   </section>

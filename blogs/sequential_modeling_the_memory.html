@@ -766,7 +766,10 @@
     </p>
 
     <div class="eq-block">
-      <div class="eq">context<sub>t</sub> = &Sigma;<sub>i</sub> &alpha;<sub>ti</sub> &middot; h<sub>i</sub> &nbsp;&nbsp; where &nbsp;&nbsp; &alpha;<sub>ti</sub> = softmax(score(s<sub>t</sub>, h<sub>i</sub>))</div>
+      <div class="eq">context<sub>t</sub> = &Sigma;<sub>i</sub> &alpha;<sub>ti</sub> &middot; h<sub>i</sub> &nbsp;&nbsp; 
+        <br><br>
+
+        where &nbsp;&nbsp; &alpha;<sub>ti</sub> = softmax(score(s<sub>t</sub>, h<sub>i</sub>))</div>
       <div class="eq-caption">
         At decoding step t, a context vector is formed by weighting all encoder states h<sub>i</sub>
         by their relevance score. Memory is no longer a fixed vector. It's a dynamic retrieval.

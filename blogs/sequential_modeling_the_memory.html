@@ -643,9 +643,9 @@
 
     <p>
       But even LSTMs didn't change the underlying shape of the problem. Memory was still a
-      vector. Still a single compressed summary of everything. In seq2seq translation, you
-      still had to hand the decoder a single fixed-size vector encoding 500 tokens of input.
-      All of it squeezed into one thing, before decoding even starts. That's the bottleneck.
+      vector. Still a single compressed summary of everything. In seq2seq (sequence to sequene) translation, we
+      still had to hand the decoder a single fixed-size vector encoding large number of tokens (say 500 tokens) of input.
+      All of it squeezed into one thing, before decoding even starts. No sense of which part of the input sequence was more informative and more related to a given part of the output sequence. That's the bottleneck.
     </p>
   </section>
 
@@ -663,7 +663,7 @@
 
     <p>
       By 2015, the bottleneck was well understood. Bahdanau et al. asked what that now may
-      seem obvious: what if we just kept all the encoder states and let the decoder look up
+      seem obvious: what if we just kept all the encoder states without compressing them into one vector and let the decoder look up
       the ones it needs, step by step? Not a summary but more like a library.
     </p>
 
@@ -685,11 +685,10 @@
     </div>
 
     <p>
-      Notice the echo of Hopfield here. Both are retrieval mechanisms: given a query, find
-      the best-matching (most similar) content. But Hopfield used fixed, hard-coded patterns
-      and iterative energy minimization. Attention uses learned continuous representations
-      and a single differentiable operation. The spirit is the same (memory as recall, not
-      storage), but attention is learned, flexible, and end-to-end trainable. Though modern Hopfield networks (2020, Ramsauer et al.) are actually very closely related to attention.
+      Notice the similarity to Hopfield networks here. Both attention and hopfield networks are retrieval mechanisms: given a query, find
+      the best-matching (most similar) content. However, unlike Hopfield networks where the weights are fixed and you keep updating the weights until you reach a stable state, attention uses learned continuous representations
+      and a single differentiable operation (attention does retrieval in one shot: compute scores, softmax, weighted sum all in one forward pass and they are all mathematical function whose gradient can be computed and hence differentiable). The spirit is the same (memory as recall, not
+      storage), but attention is learned, flexible, and end-to-end trainable. Though it is interesting to note that modern Hopfield networks (2020, Ramsauer et al.) are actually very closely related to attention.
     </p>
 
     <div class="key-shift">
@@ -704,7 +703,7 @@
 
     <p>
       And memory became distributed. There's no single vector encoding the entire history.
-      Information sits in each encoder state, at each position, untouched. The decoder's
+      Information sits in each encoder state, at each position. The decoder's
       "memory" at any step is assembled fresh, a weighted combination of whatever is
       currently relevant.
     </p>
@@ -723,8 +722,8 @@
     </div>
 
     <p>
-      The transformer took attention and made it the entire architecture. Not an add-on to
-      recurrence but actually a replacement for it. "Attention Is All You Need" wasn't just
+      The transformer took attention and said let's makes it the entire architecture. Not an add-on to
+      recurrence to mitigate the vanishing gradient problem but actually a replacement for it. I believe "Attention Is All You Need" wasn't just
       a provocative title. It was a statement that we don't need the sequential bottleneck
       at all.
     </p>
@@ -734,11 +733,11 @@
       position in a sequence attends to every other position in the same sequence. At every
       layer, each token directly exchanges information with every other token. Long-range
       dependencies, which were the chronic weakness of RNNs, become no harder than
-      short-range ones. There's no chain to flow through.
+      short-range ones. There's no chain to flow through. Though there is still need model the sequential nature of the data which is why transformers use positional encodings to inject the position of the tokens in the sequence.
     </p>
 
     <p>
-      This also killed recurrence, which unlocked parallelism. RNNs processed left to right,
+      Transformers also killed recurrence, which unlocked parallelism which is why we can even train LLMs (large language models) on billions of tokens. RNNs processed left to right,
       each step waiting on the previous one. Transformers process the whole sequence at once.
       On modern hardware, this is what made training on hundreds of billions of tokens
       feasible. Scale became reachable.
@@ -749,7 +748,7 @@
       <p>
         An LLM is still, at its core, doing next-token prediction. The same task as an
         n-gram model from the 1980s. What changed is the memory architecture. An n-gram
-        model has a 3&ndash;5 token window. A transformer has thousands. The "understanding"
+        model has a 3&ndash;5 token window. A transformer could have thousands. The "understanding"
         that emerges in LLMs isn't magic. It's what happens when we can model fine-grained
         long-range dependencies across enormous amounts of text.
       </p>
@@ -758,7 +757,7 @@
     <p>
       In a real sense, transformer memory is the most radical departure from where we
       started. Hopfield memory lived in weights. RNN memory lived in a hidden vector. LSTM
-      memory lived in a gated cell. Transformer memory lives nowhere specific, and everywhere.
+      memory lived in a gated cell. Transformer memory lives nowhere specific but it can be accessed everywhere.
       All the tokens stay in the context window, and attention repeatedly mixes them together
       so each one can pick up information from the rest. There's no single place to point to
       and say "that is the memory." It is the computation itself.
@@ -791,7 +790,7 @@
         <tr>
           <td class="model-name">Hopfield</td>
           <td class="memory-def">Stored static patterns</td>
-          <td>No sense of order or time</td>
+          <td>No sense of order or time and it was not learnable</td>
         </tr>
         <tr>
           <td class="model-name">RNN</td>
@@ -817,9 +816,9 @@
     </table>
 
     <p>
-      The progression isn't "more memory." It's a shift in the underlying metaphor each
+      So when we look at things from a birds eye view, the progression isn't "more memory." It's a shift in the underlying metaphor each
       time. Hopfield: memory is a filing system, retrieval by similarity. RNN: memory is a
-      running summary, constantly rewritten. LSTM: memory is infrastructure, a separate
+      running summary, constantly rewritten at each step. LSTM: memory is infrastructure, a separate
       channel with controlled read/write. Attention: memory isn't something you store. It's
       something you retrieve on demand, from a sequence that's always fully available.
     </p>
@@ -832,13 +831,10 @@
 
     <p>
       The remaining gap on that table (transformers have no persistent state across contexts)
-      is one of the most active areas in current research which is trying to answer the same question we started with: how do we effectively maintain memory.
+      is one of the most active areas in current research which is trying to answer the same question we started with: how do we effectively maintain memory?
    
     </p>
 
-    <p>
-      How do you make a machine remember? We're still figuring out what the question means.
-    </p>
   </section>
 
   <footer class="post-footer">

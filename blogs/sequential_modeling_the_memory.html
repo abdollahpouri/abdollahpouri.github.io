@@ -328,7 +328,7 @@
 
     .seq-svg {
       width: 100%;
-      max-width: 680px;
+      max-width: 700px;
       display: block;
       margin: 0 auto;
     }
@@ -426,8 +426,8 @@
     <p>
       To me, sequence modeling is basically the problem of understanding a sequence of events (images,
       tokens, price changes and so on) up to a certain time T<sub>N</sub>  (T<sub>1</sub>, T<sub>2</sub>, &hellip; T<sub>N-1</sub>)
-      to make a decision at that time T<sub>N</sub>. That decision could be things like whether we should
-      purchase a stock given its price history, or what would we write after the word "next"
+      to make a decision at that time T<sub>N</sub>. That decision could be things like what we should recommend to a user 
+      given we know what they have watched in the past (while caring about the order of the history), or what would we write after the word "next"
       if the previous words that came before it were "I want to visit Tehran". So the full sentence would be "I want to visit Tehran next..." 
       which the word after "next" most likely would be a word defining some time (e.g., next week, next month, next year, etc.  ). So we need to have some recollection of what came before what we see
       at each given time step. In other words we need some type of <strong>memory</strong>.
@@ -435,36 +435,89 @@
 
     <!-- Sequence diagram -->
     <div class="seq-diagram-wrap">
-      <svg class="seq-svg" viewBox="0 0 680 110" xmlns="http://www.w3.org/2000/svg" aria-label="Sequence of tokens C1 through CT">
-        <line x1="42" y1="44" x2="638" y2="44" stroke="var(--seq-line)" stroke-width="1.5"/>
-
-        <circle cx="42"  cy="44" r="22" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
-        <text x="42"  y="49" text-anchor="middle" class="seq-label">C<tspan baseline-shift="sub" font-size="9">1</tspan></text>
-
-        <circle cx="140" cy="44" r="22" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
-        <text x="140" y="49" text-anchor="middle" class="seq-label">C<tspan baseline-shift="sub" font-size="9">2</tspan></text>
-
-        <circle cx="238" cy="44" r="22" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
-        <text x="238" y="49" text-anchor="middle" class="seq-label">C<tspan baseline-shift="sub" font-size="9">3</tspan></text>
-
-        <text x="336" y="50" text-anchor="middle" class="seq-dots">· · ·</text>
-
-        <circle cx="434" cy="44" r="22" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
-        <text x="434" y="49" text-anchor="middle" class="seq-label">C<tspan baseline-shift="sub" font-size="9">T−1</tspan></text>
-
-        <circle cx="540" cy="44" r="26" fill="var(--seq-curr-fill)" stroke="var(--seq-curr-stroke)" stroke-width="2"/>
-        <text x="540" y="50" text-anchor="middle" class="seq-label seq-label-curr">C<tspan baseline-shift="sub" font-size="9">T</tspan></text>
-
-        <line x1="42"  y1="84" x2="488" y2="84" stroke="var(--seq-mem-color)" stroke-width="1.5"/>
-        <line x1="42"  y1="78" x2="42"  y2="84" stroke="var(--seq-mem-color)" stroke-width="1.5"/>
-        <line x1="488" y1="78" x2="488" y2="84" stroke="var(--seq-mem-color)" stroke-width="1.5"/>
-        <line x1="488" y1="84" x2="538" y2="84" stroke="var(--seq-mem-color)" stroke-width="1.5" marker-end="url(#arr)"/>
+      <svg class="seq-svg" viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" aria-label="Two examples of sequential data: language and recommender systems">
         <defs>
-          <marker id="arr" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L7,3 z" fill="var(--seq-mem-color)"/>
+          <marker id="arr" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L7,3 z" fill="#b8b4ad"/>
           </marker>
         </defs>
-        <text x="262" y="100" text-anchor="middle" class="seq-caption-text">what we want to remember</text>
+
+        <!-- Time axis arrow -->
+        <line x1="104" y1="9" x2="648" y2="9" stroke="#dedad4" stroke-width="1" marker-end="url(#arr)"/>
+        <text x="99" y="12" text-anchor="end" font-size="8" fill="#c8c4bc" font-style="italic">time</text>
+
+        <!-- Time step column headers (aligned with NLP boxes) -->
+        <text x="136" y="21" text-anchor="middle" font-size="8.5" fill="#b8b4ad">t<tspan baseline-shift="sub" font-size="6.5">1</tspan></text>
+        <text x="204" y="21" text-anchor="middle" font-size="8.5" fill="#b8b4ad">t<tspan baseline-shift="sub" font-size="6.5">2</tspan></text>
+        <text x="272" y="21" text-anchor="middle" font-size="8.5" fill="#b8b4ad">t<tspan baseline-shift="sub" font-size="6.5">3</tspan></text>
+        <text x="340" y="21" text-anchor="middle" font-size="8.5" fill="#b8b4ad">t<tspan baseline-shift="sub" font-size="6.5">4</tspan></text>
+        <text x="408" y="21" text-anchor="middle" font-size="8.5" fill="#b8b4ad">t<tspan baseline-shift="sub" font-size="6.5">5</tspan></text>
+        <text x="476" y="21" text-anchor="middle" font-size="8.5" fill="#b8b4ad">t<tspan baseline-shift="sub" font-size="6.5">N−1</tspan></text>
+        <text x="604" y="21" text-anchor="middle" font-size="8.5" font-weight="700" fill="var(--seq-curr-stroke)">t<tspan baseline-shift="sub" font-size="6.5">N</tspan></text>
+
+        <!-- Column separator -->
+        <line x1="96" y1="10" x2="96" y2="178" stroke="#e8e5e0" stroke-width="1"/>
+        <!-- Row separator -->
+        <line x1="0" y1="100" x2="700" y2="100" stroke="#e8e5e0" stroke-width="1"/>
+
+        <!-- ── ROW 1: NATURAL LANGUAGE ── -->
+        <text x="48" y="43" text-anchor="middle" font-size="9.5" font-weight="700" fill="#6b7280" letter-spacing="0.8">LANGUAGE</text>
+        <text x="48" y="56" text-anchor="middle" font-size="9" fill="#b8b4ad">(NLP)</text>
+
+        <rect x="104" y="29" width="60" height="36" rx="6" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
+        <text x="134" y="51" text-anchor="middle" font-size="11" fill="#4a4845" font-family="'JetBrains Mono',monospace">"I"</text>
+
+        <rect x="170" y="29" width="60" height="36" rx="6" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
+        <text x="200" y="51" text-anchor="middle" font-size="11" fill="#4a4845" font-family="'JetBrains Mono',monospace">"want"</text>
+
+        <rect x="236" y="29" width="60" height="36" rx="6" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
+        <text x="266" y="51" text-anchor="middle" font-size="11" fill="#4a4845" font-family="'JetBrains Mono',monospace">"to"</text>
+
+        <rect x="302" y="29" width="60" height="36" rx="6" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
+        <text x="332" y="51" text-anchor="middle" font-size="11" fill="#4a4845" font-family="'JetBrains Mono',monospace">"visit"</text>
+
+        <rect x="368" y="29" width="60" height="36" rx="6" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
+        <text x="398" y="51" text-anchor="middle" font-size="11" fill="#4a4845" font-family="'JetBrains Mono',monospace">"Tehran"</text>
+
+        <rect x="434" y="29" width="60" height="36" rx="6" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
+        <text x="464" y="51" text-anchor="middle" font-size="11" fill="#4a4845" font-family="'JetBrains Mono',monospace">"next"</text>
+
+        <line x1="494" y1="47" x2="514" y2="47" stroke="#b8b4ad" stroke-width="1.5" marker-end="url(#arr)"/>
+
+        <rect x="516" y="23" width="88" height="48" rx="6" fill="var(--seq-curr-fill)" stroke="var(--seq-curr-stroke)" stroke-width="2"/>
+        <text x="560" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="var(--accent)">"week"?</text>
+        <text x="560" y="59" text-anchor="middle" font-size="9" fill="var(--accent)">predict t_N</text>
+
+        <!-- ── ROW 2: RECOMMENDER SYSTEM ── -->
+        <text x="48" y="129" text-anchor="middle" font-size="8.5" font-weight="700" fill="#6b7280" letter-spacing="0.5">Recommender</text>
+        <text x="48" y="143" text-anchor="middle" font-size="8.5" font-weight="700" fill="#6b7280" letter-spacing="0.5">Systems</text>
+
+        <rect x="104" y="119" width="76" height="36" rx="6" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
+        <text x="142" y="134" text-anchor="middle" font-size="11" fill="#4a4845">Inception</text>
+        <text x="142" y="148" text-anchor="middle" font-size="8.5" fill="#b8b4ad">watched</text>
+
+        <rect x="188" y="119" width="76" height="36" rx="6" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
+        <text x="226" y="134" text-anchor="middle" font-size="11" fill="#4a4845">Arrival</text>
+        <text x="226" y="148" text-anchor="middle" font-size="8.5" fill="#b8b4ad">watched</text>
+
+        <rect x="272" y="119" width="76" height="36" rx="6" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
+        <text x="310" y="134" text-anchor="middle" font-size="11" fill="#4a4845">Dune</text>
+        <text x="310" y="148" text-anchor="middle" font-size="8.5" fill="#b8b4ad">watched</text>
+
+        <text x="371" y="143" text-anchor="middle" class="seq-dots">· · ·</text>
+
+        <rect x="394" y="119" width="76" height="36" rx="6" fill="var(--seq-past-fill)" stroke="var(--seq-past-stroke)" stroke-width="1.5"/>
+        <text x="432" y="134" text-anchor="middle" font-size="11" fill="#4a4845">Interstellar</text>
+        <text x="432" y="148" text-anchor="middle" font-size="8.5" fill="#b8b4ad">watched</text>
+
+        <line x1="470" y1="137" x2="491" y2="137" stroke="#b8b4ad" stroke-width="1.5" marker-end="url(#arr)"/>
+
+        <rect x="493" y="113" width="96" height="48" rx="6" fill="var(--seq-curr-fill)" stroke="var(--seq-curr-stroke)" stroke-width="2"/>
+        <text x="541" y="132" text-anchor="middle" font-size="11" font-weight="700" fill="var(--accent)">next movie</text>
+        <text x="541" y="148" text-anchor="middle" font-size="9" fill="var(--accent)">to recommend?</text>
+
+        <!-- Bottom note -->
+        <text x="350" y="192" text-anchor="middle" font-size="10" fill="#96918a" font-style="italic">order matters: what happened at t₁ influences t₂, which influences t₃ … all the way to t_N</text>
       </svg>
     </div>
 

@@ -69,17 +69,18 @@
 
     .site-header h1 {
       font-family: 'Lora', serif;
-      font-size: clamp(2rem, 5vw, 2.9rem);
+      font-size: clamp(2.4rem, 6vw, 3.5rem);
       font-weight: 600;
-      line-height: 1.25;
-      color: var(--text-primary);
+      line-height: 1.2;
+      color: var(--accent);
       margin-bottom: 22px;
+      letter-spacing: -0.02em;
     }
 
     .site-header .subtitle {
       font-family: 'Inter', sans-serif;
       font-size: 1.05rem;
-      font-weight: 300;
+      font-weight: 400;
       color: var(--text-secondary);
       line-height: 1.65;
       max-width: 640px;
@@ -369,23 +370,73 @@
       text-align: center;
     }
 
+    /* ── Site nav ── */
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 32px;
+    }
+
+    .site-nav .nav-logo {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-decoration: none;
+      letter-spacing: -0.01em;
+    }
+
+    .site-nav .nav-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .site-nav .nav-links a {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 400;
+      transition: color 0.15s;
+    }
+
+    .site-nav .nav-links a:hover { color: var(--accent); }
+
     @media (max-width: 600px) {
       .page-shell { padding: 0 18px 80px; }
       .site-header { padding: 36px 0 48px; margin-bottom: 52px; }
       .section { margin-bottom: 60px; }
       blockquote { font-size: 1rem; padding-left: 20px; }
+      .site-nav { padding: 14px 18px; }
+      .site-nav .nav-links { gap: 16px; }
     }
   </style>
 </head>
 <body>
+
+<nav class="site-nav">
+  <a href="../index.html" class="nav-logo">Himan Abdollahpouri</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../index.html#research">Research</a></li>
+    <li><a href="../blogs.html">Blog</a></li>
+    <li><a href="../assets/docs/CV.pdf">CV</a></li>
+  </ul>
+</nav>
+
 <div class="page-shell">
 
   <!-- ── HEADER ── -->
   <header class="site-header">
-    <h1>Sequence Modeling</h1>
-    <p class="subtitle">
-      The Memory Problem
-    </p>
+    <div class="kicker">Sequence Modeling</div>
+    <h1>The Memory Problem</h1>
     <div class="meta-row">
       <span>May 2026</span>
       <span class="dot"></span>

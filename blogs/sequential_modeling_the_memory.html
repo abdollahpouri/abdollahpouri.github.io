@@ -411,8 +411,7 @@
   <section class="section" style="margin-bottom: 56px;">
     <p>
       I have been trying to connect the dots between decades of efforts in sequence modeling
-      and understanding where we started from and how we got here. This blog post is my
-      interpretation of how I am seeing the evolution of sequence modeling with a slightly different perspective: I want to connect things together from the perspective of how we build a memory system to remember the past which is the core of sequential modeling.
+      and better understand where we started from and how we got here. This blog post is my attempt to connect things together from the perspective of how we build a memory system to remember the past which is the core of sequential modeling.
     </p>
   </section>
 
@@ -424,13 +423,13 @@
     </div>
 
     <p>
-      To me, it is basically the problem of understanding a sequence of events (images,
-      tokens, price changes and so on) up to a current time T (T1, T2, &hellip; T<sub>N-1</sub>)
-      to make a decision at that time T. That decision could be things like whether you
-      purchase a stock given its price history, or what would you write after the word "next"
-      if you know the previous words that came before it were "I want to visit Tehran
-      next&hellip;". So we need to have some recollection of what came before what we see
-      right now: in other words we need some type of memory.
+      To me, sequence modeling is basically the problem of understanding a sequence of events (images,
+      tokens, price changes and so on) up to a certain time T<sub>N (T1, T2, &hellip; T<sub>N-1</sub>)
+      to make a decision at that time T<sub>N</sub>. That decision could be things like whether we should
+      purchase a stock given its price history, or what would we write after the word "next"
+      if the previous words that came before it were "I want to visit Tehran". So the full sentence would be "I want to visit Tehran next..." 
+      which the word after "next" most likely would be a word defining some time (e.g., next week, next month, next year, etc.  ). So we need to have some recollection of what came before what we see
+      at each given time step. In other words we need some type of <strong>memory</strong>.
     </p>
 
     <!-- Sequence diagram -->
@@ -469,14 +468,11 @@
     </div>
 
     <p>
-      We humans naturally can remember things both short-term and long-term (well some of us &#x1F642;)
-      but how can a machine remember in a way that is learnable? Note that by memory I don't
-      mean a storage mechanism where you retrieve the exact value (the exact word for example) by some key. That is not feasible
-      in practice for our sequence modeling problem since that means storing an infinite
+      We humans naturally can remember things both short-term and long-term (well, some of us &#x1F642;)
+      but how can a machine remember things? Note that by memory here I mean a mechanism that can be learned and used in a machine learning model to remember the past. So it is
+     not a storage mechanism where you retrieve the exact value (the exact word for example) by some key as that is not feasible for our sequence modeling problem since that means storing an infinite
       number of sentences that we could create via the combination of our vocabulary set. 
-      Also, we want our memory mechanism to be differentiable so it can be used in our
-      machine learning model for training and learning patterns we wish to learn in our sequences. So let's take a look at the story of "memory" in machine
-      learning.
+      And since it should be learnable it should be differentiable to allow for gradient descent and backpropagation so it can be used in our machine learning model for training and learning patterns we wish to learn in our sequences. Now that we understand what memory is in machine learning and its importance in sequential modeling, let's take a look at the story of memory in machine learning.
     </p>
   </section>
 
@@ -490,28 +486,23 @@
     </div>
 
     <p>
-      The Hopfield network was, to the best of my knowledge, the first attempt to model
-      memory in machine learning. Before neural networks had anything to do with sequences,
-      Hopfield asked a simpler question: could a network store a pattern and recall it later
-      from a partial or corrupted version? The answer was yes, and the mechanism is really clean.
+      While the initial Hopfield Network (1982, Hopfield) was not a sequential model, it is a great example to start with because it is a simple model that can be used to understand the concept of memory in machine learning.
+      A Hopfield network (or associative memory) is a form of recurrent neural network that can serve as a content-addressable memory. The Hopfield network consists of a single layer of neurons, where each neuron is connected to every other neuron except itself. 
+      These connections are bidirectional and symmetric, meaning the weight of the connection from neuron i to neuron j is the same as the weight from neuron j to neuron i. Patterns are associatively recalled by fixing certain inputs, and dynamically evolve the network to minimize an energy function, towards local energy minimum states that correspond to stored patterns. 
+      Patterns are associatively learned (or "stored") by a Hebbian learning algorithm. One of the key features of Hopfield networks is their ability to recover complete patterns from partial or noisy inputs, making them robust in the face of incomplete or corrupted data.
+      
+      The weights are set all at once from the stored patterns and not learned iteratively through learning mechanisms such as gradient descent.
+      I don't want to go into the details of Hopfield Networks and I just wanted to acknowledge its existence and its importance in the history of machine learning and how we can use it to understand the concept of memory in machine learning. I encourage you to take a look at it as the idea behind it is super elegant. Especially the modern Hopfield networks (2020, Ramsauer et al.) are actually very closely related to attention mechanism which I will talk about in the next section.
     </p>
 
     <p>
-      The idea was to build a network of neurons such that we can store patterns and then
-      recall them later using noisy patterns based on some rules such as neurons that activate together strengthen their connection. The weights are set all at once from the stored patterns, not learned iteratively through learning mechanisms such as gradient descent.
-      I don't want to go into the details
-      of Hopfield Networks and I encourage you to take a look at them as the idea behind
-      it is super elegant.
-    </p>
-
-    <p>
-      It's a powerful idea. But memory here meant something very specific: a set of fixed,
-      static patterns encoded in the weights, retrievable by similarity. The network had no
-      sense of order, no notion of "what came before." You could store a face and recall it
+      Hopfild Network is a powerful idea. But memory here meant something very specific: a set of fixed,
+      static patterns encoded in the network weights, retrievable by similarity to given input. The network had no
+      sense of order and no notion of "what came before" which is why it is not a sequential model. You could store a face and recall it
       from a blurry photo, but you couldn't store a conversation. We know that a conversation
-      isn't a one-shot pattern, it's a sequence where the order of what's been said matters.
-      Memory frozen in time doesn't help with sequences. That's the gap. How do you build
-      memory that can evolve and tracks something as it unfolds step by step?
+      isn't a one-shot pattern, it's a sequence where the order of what's been said matters. Also, the initial Hopfiled network was not learnable in the same sense that we know today such as
+      using gradient descent to learn the weights. How do we build
+      a memory that can evolve and tracks something as it unfolds step by step? The answer was to change the architecture of the network somehow that can track the order of the sequence and remember things in a sequential manner and also its weights can be learned using gradient descent which is exactly what recurrent neural networks (RNNs) promissed to do and I will talk about them in the next section.
     </p>
   </section>
 
@@ -528,8 +519,8 @@
     </div>
 
     <p>
-      The Hopfield network was not trainable in the same sense that we know today such as
-      using gradient descent. It also as mentioned above could not handle order. That's when
+      The initial Hopfield network was not trainable in the same sense that we know today such as
+      using gradient descent. It also, as mentioned above, could not handle order. That's when
       RNNs came in 1986&ndash;1990 by seeing memory as some kind of notepad to keep track
       of what we have seen so far. At each step, you read the next input, update the notepad,
       and pass it forward. The catch is the notepad has a fixed size so no matter how long

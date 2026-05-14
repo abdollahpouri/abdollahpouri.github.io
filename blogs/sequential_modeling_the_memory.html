@@ -574,9 +574,8 @@
     </div>
 
     <p>
-      The problem isn't architectural, it's fundamental. If our only mechanism for long-term
-      memory is a fixed-size vector that gets completely replaced at every step, we will
-      lose information. So the question shifted: what if we could have a separate mechanism
+      The issue ran deeper than just vanishing gradients or a particular RNN design. If memory lives in a single fixed-size state that is rewritten at every step, 
+      some information will inevitably fade away. So the question shifted: what if we could have a separate mechanism
       that somehow maintains a long-term memory without being over-written at every step
       but rather it could be selectively preserved?
     </p>

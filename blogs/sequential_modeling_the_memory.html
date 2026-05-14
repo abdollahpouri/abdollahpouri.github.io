@@ -638,7 +638,7 @@
 
     <p>
       The GRU (2014) simplifies this by folding cell state and hidden state into one. It also combined the forget and input gates into one gate called update gate which controls both how much to forget of the past memoery and how much of the current input to be added to the memory. GRU also has a reset gate that controls how much of the past hidden state to expose when computing the new candidate state.
-      It has significantly fewer parameters faster to train and almost achieves the same performance in most cases. The tradeoff is less expressive control: no separate
+      It has significantly fewer parameters which makes itfaster to train and almost achieves the same performance as LSTMs in most cases. The tradeoff is less expressive control: no separate
       memory channel, just a smoother interpolation between old state and new input. 
 
     <p>

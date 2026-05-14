@@ -714,11 +714,11 @@
     </p>
 
     <p>
-      The key move is self-attention: instead of attending from decoder to encoder, every
-      position in a sequence attends to every other position in the same sequence. At every
-      layer, each token directly exchanges information with every other token. Long-range
-      dependencies, which were the chronic weakness of RNNs, become no harder than
-      short-range ones. There's no chain to flow through. Though there is still need model the sequential nature of the data which is why transformers use positional encodings to inject the position of the tokens in the sequence.
+      The key move is self-attention: instead of attending from decoder to encoder, every position in a sequence attends to every other position in the same sequence. At every layer, each token directly exchanges information with every other token. Long-range dependencies, which were the chronic weakness of RNNs, no longer degrade through repeated transformations, since tokens can attend to each other directly. There’s no long sequential chain that information has to flow through.
+
+      This doesn’t mean the problem disappears entirely. In practice, attention introduces its own challenges: limited context windows, quadratic scaling, and competition between tokens for attention. But it removes the specific bottleneck that made long-range dependencies so difficult in recurrent models.
+      
+      Though there is still a need to model the sequential nature of the data, which is why transformers use positional encodings to inject information about token order.
     </p>
 
     <p>

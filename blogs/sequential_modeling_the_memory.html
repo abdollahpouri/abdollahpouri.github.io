@@ -356,6 +356,78 @@
       font-style: italic;
     }
 
+    /* ── References ── */
+    .references {
+      margin-top: 72px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .references h2 {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .references ol {
+      list-style: none;
+      counter-reset: ref-counter;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .references ol li {
+      counter-increment: ref-counter;
+      display: flex;
+      gap: 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    .references ol li::before {
+      content: "[" counter(ref-counter) "]";
+      flex-shrink: 0;
+      color: var(--text-muted);
+      font-weight: 500;
+      min-width: 28px;
+    }
+
+    .references ol li a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .references ol li a:hover {
+      text-decoration: underline;
+    }
+
+    .ref-back {
+      color: var(--text-muted);
+      text-decoration: none;
+      margin-right: 6px;
+      font-size: 0.78rem;
+    }
+
+    .ref-back:hover { color: var(--accent); }
+
+    sup.cite a {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    sup.cite a:hover { text-decoration: underline; }
+
     /* ── Footer ── */
     .post-footer {
       margin-top: 96px;
@@ -461,7 +533,7 @@
   <section class="section" style="margin-bottom: 56px;">
     <p>
       This is something I'd been meaning to sit down and work through properly. 
-      Sequential modeling is the backbone of Large Language Models (LLMs) and hence I wanted to reviewr this topic from a deeper and relatively intuitive perspective. While I was reviewing different architectures and their capabilities from Recurrent Neural Networks to Transformers, I realized that the key concept that has been redefined and evolved over time is the concept of <strong>memory</strong>.
+      Sequential modeling is the backbone of Large Language Models (LLMs) and hence I wanted to review this topic from a deeper and relatively intuitive perspective. While I was reviewing different architectures and their capabilities from Recurrent Neural Networks to Transformers, I realized that the key concept that has been redefined and evolved over time is the concept of <strong>memory</strong>.
       It makes sense. A sequential model needs to remember the past and use it to make a decision at the current time step.
       I think this is a very interesting topic and I wanted to share my thoughts on it with you.
       Also, I am planning to write more blog posts from now on on machine learning and recommender systems mainly from my own perspective and my own understanding with an intuitive touch to it. Feedback welcome. 
@@ -476,7 +548,7 @@
 
     <p>
       To me, sequence modeling is basically the problem of understanding a sequence of events (images,
-      tokens, price changes and so on) up to a certain time T<sub>N</sub>  (T<sub>1</sub>, T<sub>2</sub>, &hellip; T<sub>N-1</sub>)
+      tokens, price changes and so on) up to a certain time (T<sub>1</sub>, T<sub>2</sub>, &hellip; T<sub>N-1</sub>)
       to make a decision at that time T<sub>N</sub>. That decision could be things like what we should recommend to a user 
       given we know what they have watched in the past (while caring about the order of the history), or what would we write after the word "next"
       if the previous words that came before it were "I want to visit Tehran". So the full sentence would be "I want to visit Tehran next..." 
@@ -574,7 +646,7 @@
 
     <p>
       We humans naturally can remember things both short-term and long-term (well, some of us &#x1F642;)
-      but the question ishow can a machine remember things and effectively use that memory to make a decision at the current time step? Note that by memory here I mean a mechanism that can be learned and used in a machine learning model to remember the past. So it is not a storage mechanism where you retrieve the exact value (the exact word for example) by some key as that is not feasible for our sequence modeling problem since that means storing an infinite
+      but the question is how can a machine remember things in the right order and effectively use that memory to make a decision at the current time step? Note that by memory here I mean a mechanism that can be learned and used in a machine learning model to remember the past. So it is not a storage mechanism where you retrieve the exact value (the exact word for example) by some key as that is not feasible for our sequence modeling problem since that means storing an infinite
       number of sentences that we could create via the combination of our vocabulary set. Now that we understand what memory is in machine learning and its importance in sequential modeling, let's take a look at the story of memory in sequential modeling.
     </p>
   </section>
@@ -617,8 +689,8 @@
     </div>
 
     <p>
-      First RNNs were introduced around 1986&ndash;1990 by seeing memory as some kind of notepad to keep track
-      of what we have seen so far. At each step, we read the next input, update the notepad by somehow combining it with the new input,
+      First RNNs were introduced around 1986&ndash;1990<sup class="cite" id="cite-1"><a href="#ref-1">[1]</a></sup> by seeing memory as some kind of notepad to keep track
+      of what we have seen so far. At each step, we read the next input, update the notepad by somehow incorporating the new input into it,
       and pass it forward. The catch is the notepad has a fixed size so no matter how long
       the sequence, everything you've seen needs to get squeezed into this notepad (a
       fixed-dimensional vector). Memory, in an RNN, is compression of all the things we
@@ -630,8 +702,8 @@
     <div class="eq-block">
       <div class="eq">h<sub>t</sub> = f(W<sub>h</sub> &middot; h<sub>t&minus;1</sub> + W<sub>x</sub> &middot; x<sub>t</sub> + b)</div>
       <div class="eq-caption">
-        The hidden state h<sub>t</sub> is a function of the previous state and the current input:
-        a continuously rewritten summary of the sequence so far.
+        The hidden state h<sub>t</sub> is a function of the previous state (h<sub>t-1</sub>) and the current input (x<sub>t</sub>):
+        a continuously rewritten summary of the sequence so far. b is the bias vector.
       </div>
     </div>
 
@@ -662,7 +734,7 @@
       a chain of matrix multiplications (remember the calculation of h<sub>t</sub> is
       recursive). Each one slightly transforms the signal. In practice, what happened at
       step 1 can become nearly undetectable by step 50. Not just that training is hard because of
-      vanishing gradients, but that the model also forgets information in the forward path.
+      vanishing gradients <sup class="cite" id="cite-2"><a href="#ref-2">[2]</a></sup> , but that the model also forgets information in the forward path.
     </p>
 
     <div class="key-shift">
@@ -695,7 +767,7 @@
     </div>
 
     <p>
-      The LSTM's answer was to make memory a separate object. They introduced the cell state:
+      The LSTM's answer<sup class="cite" id="cite-3"><a href="#ref-3">[3]</a></sup> was to make memory a separate object. They introduced the cell state:
       a channel that runs alongside the hidden state, mostly untouched, dedicated to long-term
       storage. The hidden state still does computation. The cell state is more like a conveyor
       belt: information rides it undisturbed unless something deliberately modifies it.
@@ -723,7 +795,7 @@
     </div>
 
     <p>
-      The GRU (2014) simplifies this by folding cell state and hidden state into one. It also combined the forget and input gates into one gate called update gate which controls both how much to forget of the past memoery and how much of the current input to be added to the memory. GRU also has a reset gate that controls how much of the past hidden state to expose when computing the new candidate state.
+      The GRU (2014)<sup class="cite" id="cite-4"><a href="#ref-4">[4]</a></sup> simplifies this by folding cell state and hidden state into one. It also combined the forget and input gates into one gate called update gate which controls both how much to forget of the past memoery and how much of the current input to be added to the memory. GRU also has a reset gate that controls how much of the past hidden state to expose when computing the new candidate state.
       It has significantly fewer parameters which makes it faster to train and almost achieves the same performance as LSTMs in most cases. The tradeoff is less expressive control: no separate
       memory channel, just a smoother interpolation between old state and new input. 
 
@@ -749,7 +821,7 @@
     </div>
 
     <p>
-      By 2015, the bottleneck was well understood. Bahdanau et al. asked what that now may
+      By 2015, the bottleneck was well understood. Bahdanau et al.<sup class="cite" id="cite-5"><a href="#ref-5">[5]</a></sup> asked what that now may
       seem obvious: what if we just kept all the encoder states without compressing them into one vector and let the decoder look up
       the ones it needs, step by step? Not a summary but more like a library.
     </p>
@@ -806,7 +878,7 @@
 
     <p>
       The transformer took attention and said let's makes it the entire architecture for sequential modeling. Not an add-on to
-      recurrence to mitigate the vanishing gradient problem but actually a replacement for it. I believe "Attention Is All You Need" wasn't just
+      recurrence to mitigate the vanishing gradient problem but actually a replacement for it. I believe "Attention Is All You Need"<sup class="cite" id="cite-6"><a href="#ref-6">[6]</a></sup> wasn't just
       a provocative title. It was a statement that we don't need the sequential bottleneck
       at all.
     </p>
@@ -921,7 +993,7 @@
       patterns and retrieving them by association. Given a partial or noisy input, the network would 
       settle into the closest stored pattern. Memory as recall, not storage. The key limitation was 
       that they used binary neurons and fixed weights which means they were not learnable in the modern gradient descent 
-      sense. But the spirit was there. Actually there is a recent paper by <a href="https://arxiv.org/abs/2008.02217" target="_blank">Ramsauer et al.</a>  that showed 
+      sense. But the spirit was there. Actually there is a recent paper by <a href="https://arxiv.org/abs/2008.02217" target="_blank">Ramsauer et al.</a><sup class="cite" id="cite-7"><a href="#ref-7">[7]</a></sup> that showed 
       modern Hopfield networks and attention mechanisms are actually mathematically equivalent. The 
       retrieval idea never went away. We just needed a few decades to make it differentiable and scalable.
       I left Hopfield networks out of the main post on purpose. They're fascinating and quite innovative for their time but they sit in a different chapter of history of machine learning (pre-backpropagation and pre-gradient descent) and I felt mentioning them together with RNNs, LSTMs and Transformers could have changed the direction of the blog post.
@@ -929,6 +1001,59 @@
     </p>
 
   </section>
+
+  <div class="references">
+    <h2>Key References</h2>
+    <ol>
+      <li id="ref-1">
+        <a href="#cite-1" class="ref-back" title="Back to text">↩</a>
+        Rumelhart, D. E., Hinton, G. E., &amp; Williams, R. J. (1986).
+        <em>Learning representations by back-propagating errors.</em>
+        Nature, 323, 533–536.
+        <a href="https://www.nature.com/articles/323533a0" target="_blank">nature.com</a>
+      </li>
+      <li id="ref-2">
+        <a href="#cite-2" class="ref-back" title="Back to text">↩</a>
+        Vanishing gradient problem.
+        <a href="https://en.wikipedia.org/wiki/Vanishing_gradient_problem" target="_blank">Wikipedia</a>
+      </li>
+      <li id="ref-3">
+        <a href="#cite-3" class="ref-back" title="Back to text">↩</a>
+        Hochreiter, S., &amp; Schmidhuber, J. (1997).
+        <em>Long Short-Term Memory.</em>
+        Neural Computation, 9(8), 1735–1780.
+        <a href="https://www.bioinf.jku.at/publications/older/2604.pdf" target="_blank">PDF</a>
+      </li>
+      <li id="ref-4">
+        <a href="#cite-4" class="ref-back" title="Back to text">↩</a>
+        Cho, K., van Merriënboer, B., Gulcehre, C., Bahdanau, D., Bougares, F., Schwenk, H., &amp; Bengio, Y. (2014).
+        <em>Learning Phrase Representations using RNN Encoder–Decoder for Statistical Machine Translation.</em>
+        EMNLP 2014.
+        <a href="https://arxiv.org/abs/1406.1078" target="_blank">arXiv:1406.1078</a>
+      </li>
+      <li id="ref-5">
+        <a href="#cite-5" class="ref-back" title="Back to text">↩</a>
+        Bahdanau, D., Cho, K., &amp; Bengio, Y. (2015).
+        <em>Neural Machine Translation by Jointly Learning to Align and Translate.</em>
+        ICLR 2015.
+        <a href="https://arxiv.org/abs/1409.0473" target="_blank">arXiv:1409.0473</a>
+      </li>
+      <li id="ref-6">
+        <a href="#cite-6" class="ref-back" title="Back to text">↩</a>
+        Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, Ł., &amp; Polosukhin, I. (2017).
+        <em>Attention Is All You Need.</em>
+        NeurIPS 2017.
+        <a href="https://arxiv.org/abs/1706.03762" target="_blank">arXiv:1706.03762</a>
+      </li>
+      <li id="ref-7">
+        <a href="#cite-7" class="ref-back" title="Back to text">↩</a>
+        Ramsauer, H., Schäfl, B., Lehner, J., et al. (2020).
+        <em>Hopfield Networks is All You Need.</em>
+        ICLR 2021.
+        <a href="https://arxiv.org/abs/2008.02217" target="_blank">arXiv:2008.02217</a>
+      </li>
+    </ol>
+  </div>
 
   <footer class="post-footer">
     <p class="final-line">

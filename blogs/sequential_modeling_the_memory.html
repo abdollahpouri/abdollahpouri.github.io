@@ -690,7 +690,7 @@
 
     <p>
       First RNNs were introduced around 1986&ndash;1990<sup class="cite" id="cite-1"><a href="#ref-1">[1]</a></sup> by seeing memory as some kind of notepad to keep track
-      of what we have seen so far. At each step, we read the next input, update the notepad by somehow incorporating the new input into it,
+      of what we have seen so far in the sequence. At each step, we read the next input, update the notepad by somehow incorporating the new input into it to create an updated representation of what we have seen so far,
       and pass it forward. The catch is the notepad has a fixed size so no matter how long
       the sequence, everything you've seen needs to get squeezed into this notepad (a
       fixed-dimensional vector). Memory, in an RNN, is compression of all the things we
@@ -708,7 +708,7 @@
     </div>
 
     <p>
-      So technically the memory in RNN is W<sub>h</sub> &middot; h<sub>t&minus;1</sub> which
+      So technically the full memory in RNN is W<sub>h</sub> &middot; h<sub>t&minus;1</sub> which
       is some representation of the previous state which by itself is also a representation
       of the step prior to it and that goes back until the very first word or whatever our
       first information was in the sequence (first image, first number etc).
@@ -725,7 +725,7 @@
     <p>
       It is quite a novel idea for its own time. A single vector that carries the entire past, distilled. After
       processing "I want to visit Tehran next," that vector should encode not just the last word,
-      but the subject-verb-object relationship of the full sentence. The network learns to
+      but also a comprehensive representation of the full sentence up to the current word. The network learns to
       do that compression through training.
     </p>
 
@@ -747,10 +747,14 @@
     </div>
 
     <p>
-      The issue ran deeper than just vanishing gradients or a particular RNN design. If memory lives in a single fixed-size state that is rewritten at every step, 
-      some information will inevitably fade away. So the question shifted: what if we could have a separate mechanism
-      that somehow maintains a long-term memory without being over-written at every step
-      but rather it could be selectively preserved?
+      <p>RNNs' view of sequential memory had two limitations:</p>
+      <ul>
+        <li>It compressed the entire past into one fixed-size vector, so there was no way to prioritize certain parts of past memory at any given time.</li>
+        <li>This vector was overwritten at each step, so longer sequences gradually lost early information. In other words, no solid way to maintain long-term memory while absorbing new input</li>
+      </ul>
+      
+      The first limitation — compressing everything into one vector with no way to prioritize — remained unsolved until attention came along years later. The second one, however, was addressed much sooner, and that's what LSTM solved.
+            
     </p>
   </section>
 
@@ -767,17 +771,21 @@
     </div>
 
     <p>
-      The LSTM's answer<sup class="cite" id="cite-3"><a href="#ref-3">[3]</a></sup> was to make memory a separate object. They introduced the cell state:
+      The LSTM's answer<sup class="cite" id="cite-3"><a href="#ref-3">[3]</a></sup> for the second limitation of RNN was to make the long-term memory a separate object. 
+      The idea was what if we could have a separate mechanism
+      that somehow maintains a long-term memory without being over-written at every step
+      but rather it could be selectively preserved? They introduced what they called the cell state:
       a channel that runs alongside the hidden state, mostly untouched, dedicated to long-term
-      storage. The hidden state still does computation. The cell state is more like a conveyor
-      belt: information rides it undisturbed unless something deliberately modifies it.
+      storage. The hidden state still does computation similar to RNN. The cell state is more like a conveyor
+      belt: information rides it undisturbed unless something deliberately modifies it (through what they called gates).
     </p>
 
     <p>
       Textbooks spend a lot of time on the gates (input, forget, output). They are the
       read/write/delete controls for this memory system to control how much of the past
-      should be maintained and how much should be replaced by the new information. But the
-      real insight isn't the gates. It's the additive update in each step. The LSTM writes
+      should be maintained and how much should be replaced by the new information (something that RNNs suffered from). But the
+      real insight isn't the gates. For example, one could have also added some type of gates to the hidden state in RNNs as well but as long as the hidden state update involved repeated multiplication by the same weight matrix, the gradient would still vanish.
+      It's the additive update in each step. The LSTM writes
       to the cell state by adding to it, not replacing it. That sounds like a small
       implementation detail. It's not.
     </p>
@@ -787,7 +795,7 @@
       <p>
         Additive updates create an unobstructed path for gradients to flow backward. In a
         standard RNN, every gradient passes through another matrix multiplication, slightly
-        shrinking each time. In an LSTM, the gradient can travel along the cell state
+        shrinking each time. In an LSTM, the gradient can travel along the cell state (the conveyor belt)
         directly, without passing through a nonlinearity. The cell state is a highway.
         That's why LSTMs can remember things from hundreds of steps back when vanilla RNNs
         cannot.
@@ -795,15 +803,12 @@
     </div>
 
     <p>
-      The GRU (2014)<sup class="cite" id="cite-4"><a href="#ref-4">[4]</a></sup> simplifies this by folding cell state and hidden state into one. It also combined the forget and input gates into one gate called update gate which controls both how much to forget of the past memoery and how much of the current input to be added to the memory. GRU also has a reset gate that controls how much of the past hidden state to expose when computing the new candidate state.
-      It has significantly fewer parameters which makes it faster to train and almost achieves the same performance as LSTMs in most cases. The tradeoff is less expressive control: no separate
-      memory channel, just a smoother interpolation between old state and new input. 
+      The GRU (2014)<sup class="cite" id="cite-4"><a href="#ref-4">[4]</a></sup> later simplified LSTM and used fewer parameters for faster training and almost achieved the same performance as LSTMs in most cases.
 
     <p>
       But even LSTMs didn't change the underlying shape of the problem. Memory was still a
-      vector. Still a single compressed summary of everything. In seq2seq (sequence to sequence) translation, we
-      still had to hand the decoder a single fixed-size vector encoding large number of tokens (say 500 tokens) of input.
-      All of it squeezed into one thing, before decoding even starts. No sense of which part of the input sequence was more informative and more related to a given part of the output sequence. That's the bottleneck.
+      vector. Still a single compressed summary of everything. In practice, it is important to pay more attention (pun intended) to certain parts of the input sequence rather than others. For example, in the sentence "I am thinking it would be a great idea to visit Tehran next...", it might be important to pay more attention to the word "visit" than the word "great" when generating the next word in the sequence.      
+Neither RNNs nor LSTMs had a way to do this. That's the bottleneck that attention mechanisms addressed.
     </p>
   </section>
 
